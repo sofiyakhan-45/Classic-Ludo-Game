@@ -1,0 +1,3026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Classic Ludo Game</title>
+
+<style>
+
+/* =========================
+   BASIC
+========================= */
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    padding:0;
+    width:100%;
+    min-height:100%;
+}
+
+body{
+    background:#101010;
+    color:#fff;
+    font-family:Arial, Helvetica, sans-serif;
+    overflow-x:hidden;
+}
+
+.game{
+    width:100%;
+    max-width:1250px;
+    margin:auto;
+    padding:14px;
+}
+
+.title{
+    text-align:center;
+    margin:4px 0 14px;
+    font-size:28px;
+}
+
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+
+.game-area{
+    width:100%;
+
+    display:flex;
+
+    justify-content:center;
+    align-items:flex-start;
+
+    gap:18px;
+}
+
+
+/* =========================
+   BOARD
+========================= */
+
+.board{
+    position:relative;
+
+    width:min(
+        calc(100vh - 150px),
+        calc(100vw - 330px),
+        680px
+    );
+
+    min-width:430px;
+
+    aspect-ratio:1 / 1;
+
+    display:grid;
+
+    grid-template-columns:repeat(15,1fr);
+    grid-template-rows:repeat(15,1fr);
+
+    background:#fff;
+
+    border:5px solid #fff;
+
+    overflow:hidden;
+
+    flex-shrink:0;
+}
+
+.cell{
+    position:relative;
+
+    background:#fff;
+
+    border:1px solid #aaa;
+}
+
+
+/* =========================
+   HOME COLORS
+========================= */
+
+.red-bg{
+    background:#ed1c24;
+}
+
+.green-bg{
+    background:#35b44a;
+}
+
+.yellow-bg{
+    background:#ffd92f;
+}
+
+.blue-bg{
+    background:#149bd7;
+}
+
+
+/* =========================
+   HOME LANES
+========================= */
+
+.red-lane{
+    background:#ff9999;
+}
+
+.green-lane{
+    background:#9ce2aa;
+}
+
+.yellow-lane{
+    background:#fff0a0;
+}
+
+.blue-lane{
+    background:#8ed3ec;
+}
+
+
+/* =========================
+   SAFE CELLS
+========================= */
+
+.safe{
+    background:#eeeeee !important;
+}
+
+.safe::after{
+    content:"★";
+
+    position:absolute;
+
+    left:50%;
+    top:50%;
+
+    transform:translate(-50%,-50%);
+
+    color:#666;
+
+    font-size:12px;
+}
+
+
+/* =========================
+   START ARROWS
+========================= */
+
+.start-red::after{
+    content:"↓";
+    color:#d00000;
+}
+
+.start-green::after{
+    content:"→";
+    color:#008c1d;
+}
+
+.start-yellow::after{
+    content:"↑";
+    color:#bd8d00;
+}
+
+.start-blue::after{
+    content:"←";
+    color:#006da8;
+}
+
+.start-red::after,
+.start-green::after,
+.start-yellow::after,
+.start-blue::after{
+
+    position:absolute;
+
+    left:50%;
+    top:50%;
+
+    transform:translate(-50%,-50%);
+
+    font-size:16px;
+
+    font-weight:bold;
+}
+
+
+/* =========================
+   HOME BOXES
+========================= */
+
+.home-box{
+    position:absolute;
+
+    width:40%;
+    height:40%;
+
+    z-index:5;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+}
+
+.red-home{
+    left:0;
+    top:0;
+    background:#ed1c24;
+}
+
+.green-home{
+    right:0;
+    top:0;
+    background:#35b44a;
+}
+
+.yellow-home{
+    right:0;
+    bottom:0;
+    background:#ffd92f;
+}
+
+.blue-home{
+    left:0;
+    bottom:0;
+    background:#149bd7;
+}
+
+
+.home-inner{
+    width:72%;
+    height:72%;
+
+    background:#fff;
+
+    border-radius:20px;
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:1fr 1fr;
+
+    gap:13%;
+
+    padding:13%;
+}
+
+
+.home-spot{
+    position:relative;
+
+    width:100%;
+    height:100%;
+
+    background:#f3f3f3;
+
+    border:2px solid #777;
+
+    border-radius:50%;
+
+    box-shadow:
+        inset 0 2px 5px rgba(0,0,0,.25);
+}
+
+
+/* =========================
+   CENTER
+========================= */
+
+.center{
+    position:absolute;
+
+    left:40%;
+    top:40%;
+
+    width:20%;
+    height:20%;
+
+    z-index:15;
+
+    border:2px solid #333;
+
+    background:
+        conic-gradient(
+            from 45deg,
+            #ed1c24 0deg 90deg,
+            #35b44a 90deg 180deg,
+            #ffd92f 180deg 270deg,
+            #149bd7 270deg 360deg
+        );
+}
+
+
+/* =========================
+   TOKENS
+========================= */
+
+.token{
+    position:absolute;
+
+    width:4.5%;
+    height:4.5%;
+
+    border-radius:50%;
+
+    border:3px solid white;
+
+    z-index:40;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 3px 8px rgba(0,0,0,.75);
+
+    transition:
+        left .15s linear,
+        top .15s linear,
+        transform .15s ease;
+}
+
+.token.red{
+    background:#d80000;
+}
+
+.token.green{
+    background:#008c22;
+}
+
+.token.yellow{
+    background:#dda600;
+}
+
+.token.blue{
+    background:#0877b8;
+}
+
+
+/* =========================
+   HOME TOKEN POSITION
+========================= */
+
+.home-token{
+    transform:translate(-50%,-50%);
+}
+
+
+/* Red */
+
+.red.home-token[data-id="0"]{
+    left:14%;
+    top:14%;
+}
+
+.red.home-token[data-id="1"]{
+    left:26%;
+    top:14%;
+}
+
+.red.home-token[data-id="2"]{
+    left:14%;
+    top:26%;
+}
+
+.red.home-token[data-id="3"]{
+    left:26%;
+    top:26%;
+}
+
+
+/* Green */
+
+.green.home-token[data-id="0"]{
+    left:74%;
+    top:14%;
+}
+
+.green.home-token[data-id="1"]{
+    left:86%;
+    top:14%;
+}
+
+.green.home-token[data-id="2"]{
+    left:74%;
+    top:26%;
+}
+
+.green.home-token[data-id="3"]{
+    left:86%;
+    top:26%;
+}
+
+
+/* Yellow */
+
+.yellow.home-token[data-id="0"]{
+    left:74%;
+    top:74%;
+}
+
+.yellow.home-token[data-id="1"]{
+    left:86%;
+    top:74%;
+}
+
+.yellow.home-token[data-id="2"]{
+    left:74%;
+    top:86%;
+}
+
+.yellow.home-token[data-id="3"]{
+    left:86%;
+    top:86%;
+}
+
+
+/* Blue */
+
+.blue.home-token[data-id="0"]{
+    left:14%;
+    top:74%;
+}
+
+.blue.home-token[data-id="1"]{
+    left:26%;
+    top:74%;
+}
+
+.blue.home-token[data-id="2"]{
+    left:14%;
+    top:86%;
+}
+
+.blue.home-token[data-id="3"]{
+    left:26%;
+    top:86%;
+}
+
+
+/* =========================
+   MOVABLE TOKEN
+========================= */
+
+.token.movable{
+    animation:
+        tokenGlow .65s infinite alternate;
+}
+
+@keyframes tokenGlow{
+
+    from{
+        transform:scale(1);
+        box-shadow:0 0 5px #fff;
+    }
+
+    to{
+        transform:scale(1.22);
+        box-shadow:0 0 15px 5px #fff;
+    }
+}
+
+
+/* =========================
+   SIDE PANEL
+========================= */
+
+.side-panel{
+
+    width:285px;
+
+    flex:0 0 285px;
+
+    background:#1d1d1d;
+
+    border-radius:14px;
+
+    padding:14px;
+
+    box-shadow:
+        0 5px 20px rgba(0,0,0,.5);
+
+    max-height:calc(100vh - 85px);
+
+    overflow-y:auto;
+}
+
+
+/* =========================
+   INFO
+========================= */
+
+.info{
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:7px;
+}
+
+.info-box{
+    background:#292929;
+
+    padding:8px 7px;
+
+    border-radius:8px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+    text-align:center;
+}
+
+.info-box:first-child{
+    grid-column:1 / -1;
+}
+
+
+/* =========================
+   CONTROLS
+========================= */
+
+.controls{
+
+    margin-top:10px;
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:8px;
+}
+
+.controls button{
+    width:100%;
+}
+
+
+/* =========================
+   DICE
+========================= */
+
+.dice-area{
+
+    grid-column:1 / -1;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    margin:1px 0 2px;
+}
+
+.dice{
+
+    width:65px;
+    height:65px;
+
+    background:#fff;
+
+    border:3px solid #ccc;
+
+    border-radius:12px;
+
+    padding:7px;
+
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+
+    box-shadow:
+        0 4px 12px #000;
+}
+
+.dot{
+    width:10px;
+    height:10px;
+
+    background:#111;
+
+    border-radius:50%;
+
+    align-self:center;
+    justify-self:center;
+}
+
+.dice.rolling{
+    animation:diceRoll .2s infinite;
+}
+
+@keyframes diceRoll{
+
+    0%{
+        transform:rotate(0deg) scale(1);
+    }
+
+    25%{
+        transform:rotate(8deg) scale(1.04);
+    }
+
+    50%{
+        transform:rotate(-8deg) scale(.96);
+    }
+
+    75%{
+        transform:rotate(6deg) scale(1.04);
+    }
+
+    100%{
+        transform:rotate(0deg) scale(1);
+    }
+}
+
+
+/* =========================
+   BUTTON
+========================= */
+
+button{
+
+    border:none;
+
+    padding:10px;
+
+    background:#ef3d34;
+
+    color:#fff;
+
+    border-radius:8px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+button:hover{
+    filter:brightness(1.15);
+}
+
+button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+#status{
+
+    margin:10px 0;
+
+    min-height:36px;
+
+    padding:8px;
+
+    background:#292929;
+
+    border-radius:8px;
+
+    text-align:center;
+
+    font-size:13px;
+
+    line-height:1.35;
+
+    font-weight:bold;
+}
+
+
+/* =========================
+   PLAYERS
+========================= */
+
+.players{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:7px;
+}
+
+.player{
+
+    padding:7px;
+
+    background:#292929;
+
+    border-radius:7px;
+
+    border-bottom:3px solid #fff;
+
+    font-size:12px;
+
+    font-weight:bold;
+}
+
+.player.active{
+    outline:2px solid #fff;
+}
+
+.player input{
+
+    width:100%;
+
+    margin-top:5px;
+
+    padding:7px 6px;
+
+    border:none;
+
+    border-radius:6px;
+
+    background:#fff;
+
+    color:#111;
+
+    outline:none;
+
+    font-size:12px;
+}
+
+.player input:focus{
+    box-shadow:
+        0 0 0 2px #ef3d34;
+}
+
+
+/* =========================
+   RULES
+========================= */
+
+.rules{
+
+    margin-top:10px;
+
+    padding:8px;
+
+    background:#292929;
+
+    border-radius:8px;
+
+    color:#bbb;
+
+    font-size:11px;
+
+    line-height:1.5;
+}
+
+
+/* ==================================================
+   LARGE LAPTOP / DESKTOP
+================================================== */
+
+@media (min-width:901px){
+
+    .game-area{
+        min-height:calc(100vh - 75px);
+    }
+
+}
+
+
+/* ==================================================
+   SMALL LAPTOP
+================================================== */
+
+@media (min-width:701px) and (max-width:1100px){
+
+    .game{
+        padding:10px;
+    }
+
+    .board{
+
+        width:min(
+            calc(100vh - 135px),
+            calc(100vw - 310px)
+        );
+
+        min-width:390px;
+    }
+
+    .side-panel{
+
+        width:260px;
+        flex-basis:260px;
+
+        padding:10px;
+    }
+
+}
+
+
+/* ==================================================
+   TABLET
+================================================== */
+
+@media (max-width:700px){
+
+    body{
+        overflow-x:hidden;
+    }
+
+    .game{
+        padding:8px;
+    }
+
+    .title{
+        font-size:22px;
+        margin:2px 0 9px;
+    }
+
+    .game-area{
+
+        flex-direction:column;
+
+        align-items:center;
+
+        gap:8px;
+
+        width:100%;
+    }
+
+    .board{
+
+        width:calc(100vw - 16px);
+
+        max-width:680px;
+
+        min-width:0;
+
+        border-width:4px;
+
+        order:1;
+    }
+
+    .side-panel{
+
+        order:2;
+
+        width:calc(100vw - 16px);
+
+        max-width:680px;
+
+        min-width:0;
+
+        max-height:none;
+
+        overflow:visible;
+
+        padding:9px;
+
+        border-radius:10px;
+    }
+
+    .info{
+
+        grid-template-columns:1fr 1fr 1fr;
+
+        gap:5px;
+    }
+
+    .info-box:first-child{
+        grid-column:auto;
+    }
+
+    .info-box{
+        font-size:12px;
+        padding:7px 4px;
+    }
+
+    .controls{
+
+        grid-template-columns:80px 1fr 1fr;
+
+        align-items:center;
+
+        gap:7px;
+    }
+
+    .dice-area{
+
+        grid-column:auto;
+
+        margin:0;
+    }
+
+    .dice{
+
+        width:58px;
+        height:58px;
+    }
+
+    .dot{
+        width:8px;
+        height:8px;
+    }
+
+    #status{
+        margin:7px 0;
+        min-height:32px;
+        padding:7px;
+        font-size:12px;
+    }
+
+    .players{
+
+        grid-template-columns:
+            repeat(4,1fr);
+
+        gap:5px;
+    }
+
+    .player{
+
+        padding:6px 5px;
+
+        font-size:11px;
+    }
+
+    .player input{
+
+        font-size:11px;
+
+        padding:6px 4px;
+    }
+
+    .rules{
+
+        margin-top:7px;
+
+        font-size:10px;
+
+        line-height:1.4;
+    }
+
+}
+
+
+/* ==================================================
+   MOBILE PHONE
+================================================== */
+
+@media (max-width:480px){
+
+    .game{
+        padding:5px;
+    }
+
+    .title{
+
+        font-size:18px;
+
+        margin:2px 0 6px;
+    }
+
+    .board{
+
+        width:calc(100vw - 10px);
+
+        border-width:3px;
+    }
+
+    .side-panel{
+
+        width:calc(100vw - 10px);
+
+        padding:6px;
+    }
+
+    .info{
+
+        gap:4px;
+    }
+
+    .info-box{
+
+        font-size:10px;
+
+        padding:6px 2px;
+    }
+
+    .controls{
+
+        grid-template-columns:58px 1fr 1fr;
+
+        gap:5px;
+
+        margin-top:6px;
+    }
+
+    .dice{
+
+        width:52px;
+        height:52px;
+
+        padding:6px;
+
+        border-radius:9px;
+    }
+
+    .dot{
+
+        width:7px;
+        height:7px;
+    }
+
+    button{
+
+        padding:9px 5px;
+
+        font-size:11px;
+
+        border-radius:7px;
+    }
+
+    #status{
+
+        font-size:10px;
+
+        min-height:28px;
+
+        margin:5px 0;
+
+        padding:6px;
+    }
+
+    .players{
+
+        grid-template-columns:1fr 1fr;
+
+        gap:4px;
+    }
+
+    .player{
+
+        font-size:10px;
+
+        padding:5px;
+    }
+
+    .player input{
+
+        font-size:10px;
+
+        padding:5px;
+    }
+
+    .rules{
+
+        display:none;
+    }
+
+}
+
+
+/* ==================================================
+   VERY SMALL PHONE
+================================================== */
+
+@media (max-width:360px){
+
+    .title{
+        font-size:16px;
+    }
+
+    .controls{
+
+        grid-template-columns:52px 1fr 1fr;
+    }
+
+    .dice{
+
+        width:48px;
+        height:48px;
+    }
+
+    button{
+        font-size:10px;
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="game">
+
+    <h1 class="title">
+        🎲 Classic Ludo Game
+    </h1>
+
+
+    <div class="game-area">
+
+
+        <!-- ================= BOARD ================= -->
+
+        <div
+            class="board"
+            id="board">
+        </div>
+
+
+        <!-- ================= SIDE PANEL ================= -->
+
+        <div class="side-panel">
+
+
+            <!-- GAME INFO -->
+
+            <div class="info">
+
+                <div class="info-box">
+                    Turn:
+                    <span id="turn">
+                        Red
+                    </span>
+                </div>
+
+                <div class="info-box">
+                    Dice:
+                    <span id="diceNumber">
+                        -
+                    </span>
+                </div>
+
+                <div class="info-box">
+                    Finished:
+                    <span id="finishedNumber">
+                        0
+                    </span>/4
+                </div>
+
+            </div>
+
+
+            <!-- CONTROLS -->
+
+            <div class="controls">
+
+                <div class="dice-area">
+
+                    <div
+                        class="dice"
+                        id="dice">
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="rollBtn"
+                    onclick="rollDice()">
+
+                    🎲 ROLL
+
+                </button>
+
+
+                <button
+                    onclick="restartGame()">
+
+                    🔄 RESTART
+
+                </button>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div id="status">
+
+                Red's turn — Roll the dice.
+
+            </div>
+
+
+            <!-- PLAYERS -->
+
+            <div
+                class="players"
+                id="players">
+            </div>
+
+
+            <!-- RULES -->
+
+            <div class="rules">
+
+                🎲 Roll the dice and click the glowing token.
+
+                <br>
+
+                6 is required to bring a token out.
+
+                <br>
+
+                ⭐ Star cells are safe.
+
+                <br>
+
+                💥 Capture opponent tokens.
+
+                <br>
+
+                🏆 Get all 4 tokens to the center.
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   GAME DATA
+========================= */
+
+const colors=[
+    "red",
+    "green",
+    "yellow",
+    "blue"
+];
+
+const defaultNames=[
+    "Red",
+    "Green",
+    "Yellow",
+    "Blue"
+];
+
+
+/* =========================
+   MAIN PATH
+========================= */
+
+const path=[
+
+    [6,0],
+    [6,1],
+    [6,2],
+    [6,3],
+    [6,4],
+    [6,5],
+
+    [5,6],
+    [4,6],
+    [3,6],
+    [2,6],
+    [1,6],
+    [0,6],
+
+    [0,7],
+    [0,8],
+
+    [1,8],
+    [2,8],
+    [3,8],
+    [4,8],
+    [5,8],
+
+    [6,9],
+    [6,10],
+    [6,11],
+    [6,12],
+    [6,13],
+    [6,14],
+
+    [7,14],
+
+    [8,14],
+    [8,13],
+    [8,12],
+    [8,11],
+    [8,10],
+    [8,9],
+
+    [9,8],
+    [10,8],
+    [11,8],
+    [12,8],
+    [13,8],
+    [14,8],
+
+    [14,7],
+    [14,6],
+
+    [13,6],
+    [12,6],
+    [11,6],
+    [10,6],
+    [9,6],
+
+    [8,5],
+    [8,4],
+    [8,3],
+    [8,2],
+    [8,1],
+    [8,0],
+
+    [7,0]
+
+];
+
+
+/* =========================
+   PLAYER START
+========================= */
+
+const startIndex={
+
+    red:0,
+
+    green:13,
+
+    yellow:26,
+
+    blue:39
+
+};
+
+
+/* =========================
+   HOME PATH
+========================= */
+
+const homeLane={
+
+    red:[
+        [7,1],
+        [7,2],
+        [7,3],
+        [7,4],
+        [7,5],
+        [7,6]
+    ],
+
+    green:[
+        [1,7],
+        [2,7],
+        [3,7],
+        [4,7],
+        [5,7],
+        [6,7]
+    ],
+
+    yellow:[
+        [7,13],
+        [7,12],
+        [7,11],
+        [7,10],
+        [7,9],
+        [7,8]
+    ],
+
+    blue:[
+        [13,7],
+        [12,7],
+        [11,7],
+        [10,7],
+        [9,7],
+        [8,7]
+    ]
+
+};
+
+
+/* =========================
+   SAFE CELLS
+========================= */
+
+const safeCells=[
+    0,
+    8,
+    13,
+    21,
+    26,
+    34,
+    39,
+    47
+];
+
+
+/* =========================
+   GAME STATE
+========================= */
+
+let game={
+
+    currentPlayer:0,
+
+    dice:0,
+
+    rolling:false,
+
+    moving:false,
+
+    gameOver:false,
+
+    tokens:[]
+
+};
+
+
+/* =========================
+   PLAYER NAME
+========================= */
+
+function getPlayerName(index){
+
+    const input=
+        document.getElementById(
+            "playerName"+index
+        );
+
+
+    if(
+        input &&
+        input.value.trim()!==""
+    ){
+
+        return input.value.trim();
+
+    }
+
+
+    return defaultNames[index];
+
+}
+
+
+/* =========================
+   CREATE BOARD
+========================= */
+
+function createBoard(){
+
+    const board=
+        document.getElementById(
+            "board"
+        );
+
+
+    board.innerHTML="";
+
+
+    for(
+        let row=0;
+        row<15;
+        row++
+    ){
+
+        for(
+            let col=0;
+            col<15;
+            col++
+        ){
+
+            const cell=
+                document.createElement(
+                    "div"
+                );
+
+
+            cell.className="cell";
+
+
+            /* RED HOME */
+
+            if(
+                row<=5 &&
+                col<=5
+            ){
+
+                cell.classList.add(
+                    "red-bg"
+                );
+
+            }
+
+
+            /* GREEN HOME */
+
+            if(
+                row<=5 &&
+                col>=9
+            ){
+
+                cell.classList.add(
+                    "green-bg"
+                );
+
+            }
+
+
+            /* YELLOW HOME */
+
+            if(
+                row>=9 &&
+                col>=9
+            ){
+
+                cell.classList.add(
+                    "yellow-bg"
+                );
+
+            }
+
+
+            /* BLUE HOME */
+
+            if(
+                row>=9 &&
+                col<=5
+            ){
+
+                cell.classList.add(
+                    "blue-bg"
+                );
+
+            }
+
+
+            /* MAIN PATH */
+
+            path.forEach(
+                (p,index)=>{
+
+                    if(
+                        p[0]===row &&
+                        p[1]===col
+                    ){
+
+                        cell.className="cell";
+
+
+                        if(
+                            safeCells.includes(index)
+                        ){
+
+                            cell.classList.add(
+                                "safe"
+                            );
+
+                        }
+
+
+                        if(index===0){
+
+                            cell.classList.add(
+                                "start-red"
+                            );
+
+                        }
+
+                        if(index===13){
+
+                            cell.classList.add(
+                                "start-green"
+                            );
+
+                        }
+
+                        if(index===26){
+
+                            cell.classList.add(
+                                "start-yellow"
+                            );
+
+                        }
+
+                        if(index===39){
+
+                            cell.classList.add(
+                                "start-blue"
+                            );
+
+                        }
+
+                    }
+
+                }
+            );
+
+
+            /* HOME LANES */
+
+            homeLane.red.forEach(
+                p=>{
+
+                    if(
+                        p[0]===row &&
+                        p[1]===col
+                    ){
+
+                        cell.className=
+                            "cell red-lane";
+
+                    }
+
+                }
+            );
+
+
+            homeLane.green.forEach(
+                p=>{
+
+                    if(
+                        p[0]===row &&
+                        p[1]===col
+                    ){
+
+                        cell.className=
+                            "cell green-lane";
+
+                    }
+
+                }
+            );
+
+
+            homeLane.yellow.forEach(
+                p=>{
+
+                    if(
+                        p[0]===row &&
+                        p[1]===col
+                    ){
+
+                        cell.className=
+                            "cell yellow-lane";
+
+                    }
+
+                }
+            );
+
+
+            homeLane.blue.forEach(
+                p=>{
+
+                    if(
+                        p[0]===row &&
+                        p[1]===col
+                    ){
+
+                        cell.className=
+                            "cell blue-lane";
+
+                    }
+
+                }
+            );
+
+
+            board.appendChild(cell);
+
+        }
+
+    }
+
+
+    createHomes();
+
+    createTokens();
+
+}
+
+
+/* =========================
+   CREATE HOMES
+========================= */
+
+function createHomes(){
+
+    createHome("red-home");
+
+    createHome("green-home");
+
+    createHome("yellow-home");
+
+    createHome("blue-home");
+
+
+    const center=
+        document.createElement(
+            "div"
+        );
+
+
+    center.className="center";
+
+
+    document
+        .getElementById("board")
+        .appendChild(center);
+
+}
+
+
+function createHome(homeClass){
+
+    const home=
+        document.createElement(
+            "div"
+        );
+
+
+    home.className=
+        "home-box "+
+        homeClass;
+
+
+    const inner=
+        document.createElement(
+            "div"
+        );
+
+
+    inner.className=
+        "home-inner";
+
+
+    for(
+        let i=0;
+        i<4;
+        i++
+    ){
+
+        const spot=
+            document.createElement(
+                "div"
+            );
+
+
+        spot.className=
+            "home-spot";
+
+
+        inner.appendChild(
+            spot
+        );
+
+    }
+
+
+    home.appendChild(
+        inner
+    );
+
+
+    document
+        .getElementById("board")
+        .appendChild(home);
+
+}
+
+
+/* =========================
+   CREATE TOKENS
+========================= */
+
+function createTokens(){
+
+    game.tokens=[];
+
+
+    colors.forEach(
+        (color,player)=>{
+
+            for(
+                let id=0;
+                id<4;
+                id++
+            ){
+
+                const token={
+
+                    player:player,
+
+                    color:color,
+
+                    id:id,
+
+                    step:-1,
+
+                    finished:false,
+
+                    element:null
+
+                };
+
+
+                const element=
+                    document.createElement(
+                        "div"
+                    );
+
+
+                element.className=
+                    "token "+
+                    color+
+                    " home-token";
+
+
+                element.dataset.id=id;
+
+
+                element.onclick=()=>{
+
+                    tokenClicked(
+                        token
+                    );
+
+                };
+
+
+                token.element=
+                    element;
+
+
+                game.tokens.push(
+                    token
+                );
+
+
+                document
+                    .getElementById(
+                        "board"
+                    )
+                    .appendChild(
+                        element
+                    );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================
+   GET TOKEN POSITION
+========================= */
+
+function getPosition(token){
+
+    if(
+        token.step===-1
+    ){
+
+        return null;
+
+    }
+
+
+    if(
+        token.step>=52
+    ){
+
+        const index=
+            token.step-52;
+
+
+        if(index<6){
+
+            return homeLane[
+                token.color
+            ][index];
+
+        }
+
+
+        return [7,7];
+
+    }
+
+
+    const index=
+
+        (
+            startIndex[
+                token.color
+            ]
+            +
+            token.step
+        )%52;
+
+
+    return path[index];
+
+}
+
+
+/* =========================
+   POSITION TOKEN
+========================= */
+
+function positionToken(token){
+
+    if(
+        token.step===-1
+    ){
+
+        token.element.classList.add(
+            "home-token"
+        );
+
+        token.element.style.left="";
+        token.element.style.top="";
+
+        token.element.style.width="";
+        token.element.style.height="";
+
+        token.element.style.transform=
+            "translate(-50%,-50%)";
+
+        return;
+
+    }
+
+
+    token.element.classList.remove(
+        "home-token"
+    );
+
+
+    const board=
+        document.getElementById(
+            "board"
+        );
+
+
+    const width=
+        board.clientWidth/15;
+
+
+    const height=
+        board.clientHeight/15;
+
+
+    const position=
+        getPosition(token);
+
+
+    token.element.style.width=
+        width*.70+"px";
+
+
+    token.element.style.height=
+        height*.70+"px";
+
+
+    token.element.style.left=
+        (
+            position[1]*
+            width
+            +
+            width*.15
+        )+"px";
+
+
+    token.element.style.top=
+        (
+            position[0]*
+            height
+            +
+            height*.15
+        )+"px";
+
+
+    token.element.style.transform=
+        "none";
+
+}
+
+
+/* =========================
+   DRAW DICE
+========================= */
+
+function drawDice(number){
+
+    const dice=
+        document.getElementById(
+            "dice"
+        );
+
+
+    dice.innerHTML="";
+
+
+    const faces={
+
+        1:[5],
+
+        2:[1,9],
+
+        3:[1,5,9],
+
+        4:[1,3,7,9],
+
+        5:[1,3,5,7,9],
+
+        6:[1,3,4,6,7,9]
+
+    };
+
+
+    for(
+        let i=1;
+        i<=9;
+        i++
+    ){
+
+        const box=
+            document.createElement(
+                "div"
+            );
+
+
+        if(
+            faces[number].includes(i)
+        ){
+
+            box.className="dot";
+
+        }
+
+
+        dice.appendChild(
+            box
+        );
+
+    }
+
+}
+
+
+/* =========================
+   ROLL DICE
+========================= */
+
+function rollDice(){
+
+    if(
+        game.rolling ||
+        game.moving ||
+        game.gameOver
+    ){
+
+        return;
+
+    }
+
+
+    game.rolling=true;
+
+
+    document
+        .getElementById(
+            "rollBtn"
+        )
+        .disabled=true;
+
+
+    const diceBox=
+        document.getElementById(
+            "dice"
+        );
+
+
+    diceBox.classList.add(
+        "rolling"
+    );
+
+
+    let count=0;
+
+
+    const animation=
+        setInterval(
+            ()=>{
+
+                const random=
+                    Math.floor(
+                        Math.random()*6
+                    )+1;
+
+
+                drawDice(
+                    random
+                );
+
+
+                count++;
+
+
+                if(
+                    count>=12
+                ){
+
+                    clearInterval(
+                        animation
+                    );
+
+
+                    game.dice=
+                        Math.floor(
+                            Math.random()*6
+                        )+1;
+
+
+                    drawDice(
+                        game.dice
+                    );
+
+
+                    diceBox.classList.remove(
+                        "rolling"
+                    );
+
+
+                    document
+                        .getElementById(
+                            "diceNumber"
+                        )
+                        .textContent=
+                        game.dice;
+
+
+                    game.rolling=false;
+
+
+                    showMovableTokens();
+
+                }
+
+            },
+            80
+        );
+
+}
+
+
+/* =========================
+   MOVABLE TOKENS
+========================= */
+
+function getMovableTokens(
+    color,
+    dice
+){
+
+    return game.tokens.filter(
+        token=>{
+
+            if(
+                token.color!==color
+            ){
+
+                return false;
+
+            }
+
+
+            if(
+                token.finished
+            ){
+
+                return false;
+
+            }
+
+
+            if(
+                token.step===-1
+            ){
+
+                return dice===6;
+
+            }
+
+
+            return (
+                token.step+dice<=57
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   SHOW MOVABLE
+========================= */
+
+function showMovableTokens(){
+
+    game.tokens.forEach(
+        token=>{
+
+            token.element.classList.remove(
+                "movable"
+            );
+
+        }
+    );
+
+
+    const color=
+        colors[
+            game.currentPlayer
+        ];
+
+
+    const movable=
+        getMovableTokens(
+            color,
+            game.dice
+        );
+
+
+    if(
+        movable.length===0
+    ){
+
+        document
+            .getElementById(
+                "status"
+            )
+            .textContent=
+            "No valid move.";
+
+        setTimeout(
+            ()=>{
+
+                nextPlayer();
+
+            },
+            800
+        );
+
+        return;
+
+    }
+
+
+    movable.forEach(
+        token=>{
+
+            token.element.classList.add(
+                "movable"
+            );
+
+        }
+    );
+
+
+    document
+        .getElementById(
+            "status"
+        )
+        .textContent=
+        "Click a glowing token.";
+
+}
+
+
+/* =========================
+   TOKEN CLICK
+========================= */
+
+function tokenClicked(token){
+
+    if(
+        game.moving ||
+        game.gameOver
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        token.player!==
+        game.currentPlayer
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        game.dice===0
+    ){
+
+        return;
+
+    }
+
+
+    const movable=
+        getMovableTokens(
+            token.color,
+            game.dice
+        );
+
+
+    if(
+        !movable.includes(token)
+    ){
+
+        return;
+
+    }
+
+
+    game.tokens.forEach(
+        t=>{
+
+            t.element.classList.remove(
+                "movable"
+            );
+
+        }
+    );
+
+
+    moveToken(
+        token,
+        game.dice
+    );
+
+}
+
+
+/* =========================
+   MOVE TOKEN
+========================= */
+
+function moveToken(
+    token,
+    dice
+){
+
+    game.moving=true;
+
+
+    /* HOME TO START */
+
+    if(
+        token.step===-1
+    ){
+
+        token.step=0;
+
+
+        positionToken(
+            token
+        );
+
+
+        setTimeout(
+            ()=>{
+
+                finishMove(
+                    token,
+                    dice
+                );
+
+            },
+            300
+        );
+
+
+        return;
+
+    }
+
+
+    let moved=0;
+
+
+    function moveStep(){
+
+        if(
+            moved<dice
+        ){
+
+            token.step++;
+
+            moved++;
+
+
+            positionToken(
+                token
+            );
+
+
+            setTimeout(
+                moveStep,
+                160
+            );
+
+        }
+        else{
+
+            finishMove(
+                token,
+                dice
+            );
+
+        }
+
+    }
+
+
+    moveStep();
+
+}
+
+
+/* =========================
+   FINISH MOVE
+========================= */
+
+function finishMove(
+    token,
+    dice
+){
+
+    if(
+        token.step>=57
+    ){
+
+        token.step=57;
+
+        token.finished=true;
+
+    }
+
+
+    captureOpponent(
+        token
+    );
+
+
+    game.tokens.forEach(
+        positionToken
+    );
+
+
+    updateFinished();
+
+
+    const playerTokens=
+        game.tokens.filter(
+            t=>
+                t.player===
+                game.currentPlayer
+        );
+
+
+    /* WINNER */
+
+    if(
+        playerTokens.every(
+            t=>t.finished
+        )
+    ){
+
+        game.gameOver=true;
+
+        game.moving=false;
+
+
+        document
+            .getElementById(
+                "status"
+            )
+            .textContent=
+            "🏆 "+
+            getPlayerName(
+                game.currentPlayer
+            )+
+            " Wins!";
+
+
+        return;
+
+    }
+
+
+    game.moving=false;
+
+    game.dice=0;
+
+
+    /* SIX = EXTRA TURN */
+
+    if(
+        dice===6
+    ){
+
+        document
+            .getElementById(
+                "rollBtn"
+            )
+            .disabled=false;
+
+
+        document
+            .getElementById(
+                "status"
+            )
+            .textContent=
+            getPlayerName(
+                game.currentPlayer
+            )+
+            " rolled 6 — Roll again!";
+
+    }
+    else{
+
+        nextPlayer();
+
+    }
+
+}
+
+
+/* =========================
+   CAPTURE
+========================= */
+
+function captureOpponent(token){
+
+    if(
+        token.step<0 ||
+        token.step>=52 ||
+        token.finished
+    ){
+
+        return;
+
+    }
+
+
+    const landing=
+        (
+            startIndex[
+                token.color
+            ]
+            +
+            token.step
+        )%52;
+
+
+    if(
+        safeCells.includes(
+            landing
+        )
+    ){
+
+        return;
+
+    }
+
+
+    game.tokens.forEach(
+        other=>{
+
+            if(
+                other===token
+            ){
+
+                return;
+
+            }
+
+
+            if(
+                other.player===
+                token.player
+            ){
+
+                return;
+
+            }
+
+
+            if(
+                other.step<0 ||
+                other.step>=52 ||
+                other.finished
+            ){
+
+                return;
+
+            }
+
+
+            const otherPosition=
+                (
+                    startIndex[
+                        other.color
+                    ]
+                    +
+                    other.step
+                )%52;
+
+
+            if(
+                landing===
+                otherPosition
+            ){
+
+                other.step=-1;
+
+                other.finished=false;
+
+                positionToken(
+                    other
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================
+   NEXT PLAYER
+========================= */
+
+function nextPlayer(){
+
+    game.dice=0;
+
+
+    game.currentPlayer++;
+
+
+    if(
+        game.currentPlayer>=4
+    ){
+
+        game.currentPlayer=0;
+
+    }
+
+
+    document
+        .getElementById(
+            "rollBtn"
+        )
+        .disabled=false;
+
+
+    document
+        .getElementById(
+            "diceNumber"
+        )
+        .textContent="-";
+
+
+    drawDice(1);
+
+
+    updateUI();
+
+
+    document
+        .getElementById(
+            "status"
+        )
+        .textContent=
+        getPlayerName(
+            game.currentPlayer
+        )+
+        "'s turn — Roll the dice.";
+
+}
+
+
+/* =========================
+   UPDATE UI
+========================= */
+
+function updateUI(){
+
+    document
+        .getElementById(
+            "turn"
+        )
+        .textContent=
+        getPlayerName(
+            game.currentPlayer
+        );
+
+
+    document
+        .querySelectorAll(
+            ".player"
+        )
+        .forEach(
+            (player,index)=>{
+
+                player.classList.toggle(
+                    "active",
+                    index===
+                    game.currentPlayer
+                );
+
+            }
+        );
+
+
+    updateFinished();
+
+}
+
+
+/* =========================
+   FINISHED COUNT
+========================= */
+
+function updateFinished(){
+
+    const count=
+        game.tokens.filter(
+            token=>
+
+                token.player===
+                game.currentPlayer
+
+                &&
+
+                token.finished
+
+        ).length;
+
+
+    document
+        .getElementById(
+            "finishedNumber"
+        )
+        .textContent=count;
+
+}
+
+
+/* =========================
+   PLAYERS
+========================= */
+
+function createPlayers(){
+
+    const box=
+        document.getElementById(
+            "players"
+        );
+
+
+    box.innerHTML="";
+
+
+    colors.forEach(
+        (color,index)=>{
+
+            const player=
+                document.createElement(
+                    "div"
+                );
+
+
+            player.className=
+                "player";
+
+
+            player.style.borderBottomColor=
+                getColor(color);
+
+
+            player.innerHTML=`
+
+                <div>
+                    ● ${defaultNames[index]}
+                </div>
+
+                <input
+                    type="text"
+                    id="playerName${index}"
+                    placeholder="Enter name"
+                    maxlength="15"
+                >
+
+            `;
+
+
+            box.appendChild(
+                player
+            );
+
+
+            const input=
+                document.getElementById(
+                    "playerName"+index
+                );
+
+
+            input.addEventListener(
+                "input",
+                ()=>{
+
+                    updateUI();
+
+
+                    if(
+                        game.currentPlayer===
+                        index &&
+                        game.dice===0 &&
+                        !game.gameOver
+                    ){
+
+                        document
+                            .getElementById(
+                                "status"
+                            )
+                            .textContent=
+                            getPlayerName(
+                                index
+                            )+
+                            "'s turn — Roll the dice.";
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   COLOR
+========================= */
+
+function getColor(color){
+
+    if(
+        color==="red"
+    ){
+
+        return "#ed1c24";
+
+    }
+
+
+    if(
+        color==="green"
+    ){
+
+        return "#35b44a";
+
+    }
+
+
+    if(
+        color==="yellow"
+    ){
+
+        return "#ffd92f";
+
+    }
+
+
+    return "#149bd7";
+
+}
+
+
+/* =========================
+   RESTART
+========================= */
+
+function restartGame(){
+
+    game={
+
+        currentPlayer:0,
+
+        dice:0,
+
+        rolling:false,
+
+        moving:false,
+
+        gameOver:false,
+
+        tokens:[]
+
+    };
+
+
+    document
+        .getElementById(
+            "rollBtn"
+        )
+        .disabled=false;
+
+
+    document
+        .getElementById(
+            "diceNumber"
+        )
+        .textContent="-";
+
+
+    createBoard();
+
+
+    drawDice(1);
+
+
+    updateUI();
+
+
+    document
+        .getElementById(
+            "status"
+        )
+        .textContent=
+        getPlayerName(0)+
+        "'s turn — Roll the dice.";
+
+}
+
+
+/* =========================
+   WINDOW RESIZE
+========================= */
+
+window.addEventListener(
+    "resize",
+    ()=>{
+
+        if(
+            game &&
+            game.tokens
+        ){
+
+            game.tokens.forEach(
+                positionToken
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   START GAME
+========================= */
+
+createPlayers();
+
+restartGame();
+
+</script>
+
+</body>
+</html>
